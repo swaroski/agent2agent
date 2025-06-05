@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# pyenv local version file (optional to ignore)
+.python-version
+
+# VS Code settings (optional)
+.vscode/
+
+# macOS junk
+.DS_Store
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Test cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+.cache
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+
+# SQLite database
+*.db
+
+# Installer logs
+pip-log.txt
+
+# Environment variables or credentials
+.env
+.env.*
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# CLI history
+.python_history
+
+# UV-specific artifacts (if any appear)
+.uv/
