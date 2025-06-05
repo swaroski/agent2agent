@@ -148,9 +148,11 @@ uv run a2a-mcp --run mcp-server --transport sse
 ## 2. Start Orchestrator Agent
 ```bash
 
-cd a2a_mcp
+
 source .venv/bin/activate
 uv run agents/ --agent-card agent_cards/orchestrator_agent.json --port 10101
+or
+PYTHONPATH=. uv run a2a_mcp/agents --agent-card a2a_mcp/agent_cards/orchestrator_agent.json --port 10101
 ```
 
 ## 3. Start Planner Agent

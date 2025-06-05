@@ -1,5 +1,5 @@
 def main():
-    print("Hello from agent2agent!")
+    print("Hello from cli!")
 
 
 if __name__ == "__main__":
