@@ -17,7 +17,8 @@ from mcp.server.fastmcp.utilities.logging import get_logger
 
 
 logger = get_logger(__name__)
-AGENT_CARDS_DIR = "agent_cards"
+AGENT_CARDS_DIR = Path(__file__).resolve().parent.parent / "agent_cards"
+
 MODEL = "models/embedding-001"
 SQLLITE_DB = "travel_agency.db"
 PLACES_API_URL = "https://places.googleapis.com/v1/places:searchText"
@@ -49,7 +50,7 @@ def load_agent_cards():
     """
     card_uris = []
     agent_cards = []
-    dir_path = Path(AGENT_CARDS_DIR)
+    dir_path = AGENT_CARDS_DIR if isinstance(AGENT_CARDS_DIR, Path) else Path(AGENT_CARDS_DIR)
     if not dir_path.is_dir():
         logger.error(
             f"Agent cards directory not found or is not a directory: {AGENT_CARDS_DIR}"
