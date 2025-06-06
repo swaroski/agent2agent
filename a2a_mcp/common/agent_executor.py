@@ -33,7 +33,7 @@ class GenericAgentExecutor(AgentExecutor):
         context: RequestContext,
         event_queue: EventQueue,
     ) -> None:
-        logger.info(f'Executing agent {self.agent.agent_name}')
+        logger.info(f"Executing agent {self.agent.agent_name}")
         error = self._validate_request(context)
         if error:
             raise ServerError(error=InvalidParamsError())
@@ -51,7 +51,7 @@ class GenericAgentExecutor(AgentExecutor):
         async for item in self.agent.stream(query, task.contextId, task.id):
             # Agent to Agent call will return events,
             # Update the relevant ids to proxy back.
-            if hasattr(item, 'root') and isinstance(
+            if hasattr(item, "root") and isinstance(
                 item.root, SendStreamingMessageSuccessResponse
             ):
                 event = item.root.result
@@ -62,18 +62,18 @@ class GenericAgentExecutor(AgentExecutor):
                     event_queue.enqueue_event(event)
                 continue
 
-            is_task_complete = item['is_task_complete']
-            require_user_input = item['require_user_input']
+            is_task_complete = item["is_task_complete"]
+            require_user_input = item["require_user_input"]
 
             if is_task_complete:
-                if item['response_type'] == 'data':
-                    part = DataPart(data=item['content'])
+                if item["response_type"] == "data":
+                    part = DataPart(data=item["content"])
                 else:
-                    part = TextPart(text=item['content'])
+                    part = TextPart(text=item["content"])
 
                 updater.add_artifact(
                     [part],
-                    name=f'{self.agent.agent_name}-result',
+                    name=f"{self.agent.agent_name}-result",
                 )
                 updater.complete()
                 break
@@ -81,7 +81,7 @@ class GenericAgentExecutor(AgentExecutor):
                 updater.update_status(
                     TaskState.input_required,
                     new_agent_text_message(
-                        item['content'],
+                        item["content"],
                         task.contextId,
                         task.id,
                     ),
@@ -92,7 +92,7 @@ class GenericAgentExecutor(AgentExecutor):
                 updater.update_status(
                     TaskState.working,
                     new_agent_text_message(
-                        item['content'],
+                        item["content"],
                         task.contextId,
                         task.id,
                     ),
@@ -100,7 +100,6 @@ class GenericAgentExecutor(AgentExecutor):
 
     def _validate_request(self, context: RequestContext) -> bool:
         return False
-
 
     async def cancel(
         self, request: RequestContext, event_queue: EventQueue

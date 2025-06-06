@@ -1,6 +1,4 @@
 import asyncio
-import base64
-import os
 import urllib
 import httpx
 
@@ -11,14 +9,10 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from rich.json import JSON
-from rich.markdown import Markdown
 
 from a2a.client import A2AClient, A2ACardResolver
 from a2a.types import (
-    Part,
     TextPart,
-    FilePart,
-    FileWithBytes,
     Task,
     TaskState,
     Message,
@@ -37,36 +31,40 @@ from push_notification_auth import PushNotificationReceiverAuth
 # Initialize Rich console
 console = Console()
 
+
 def extract_text_from_parts(parts):
     """Extract text content from message parts."""
     texts = []
     for part in parts:
         # Handle the nested Part structure: Part(root=TextPart(...))
-        if hasattr(part, 'root') and hasattr(part.root, 'text'):
+        if hasattr(part, "root") and hasattr(part.root, "text"):
             texts.append(part.root.text)
-        elif hasattr(part, 'text'):
+        elif hasattr(part, "text"):
             texts.append(part.text)
-    return ' '.join(texts) if texts else ""
+    return " ".join(texts) if texts else ""
+
 
 def print_agent_response(message_text: str):
     """Print agent response with nice formatting and colors."""
     if not message_text.strip():
         return
-    
+
     # Create a panel with the agent's response
     panel = Panel(
         message_text,
         title="🤖 Agent Response",
         title_align="left",
         border_style="blue",
-        padding=(0, 1)
+        padding=(0, 1),
     )
     console.print(panel)
+
 
 def print_user_message(message_text: str):
     """Print user message with different styling."""
     text = Text(f"👤 You: {message_text}", style="bold white")
     console.print(text)
+
 
 def print_status_update(status: str, message: str = ""):
     """Print status updates in a subtle way."""
@@ -75,13 +73,14 @@ def print_status_update(status: str, message: str = ""):
         status_text.append(f" - {message}")
     console.print(status_text)
 
+
 def print_agent_card(card):
     """Print agent card in a nice format."""
     console.print("\n🎯 [bold cyan]Agent Information[/bold cyan]")
-    
+
     # Extract key information from the card
     card_data = card.model_dump(exclude_none=True)
-    
+
     info_panel = Panel(
         f"[bold]Name:[/bold] {card_data.get('name', 'Unknown')}\n"
         f"[bold]Description:[/bold] {card_data.get('description', 'No description')}\n"
@@ -90,9 +89,10 @@ def print_agent_card(card):
         f"[bold]Capabilities:[/bold] Streaming: {card_data.get('capabilities', {}).get('streaming', False)}, "
         f"Push Notifications: {card_data.get('capabilities', {}).get('pushNotifications', False)}",
         title="Agent Card",
-        border_style="green"
+        border_style="green",
     )
     console.print(info_panel)
+
 
 @click.command()
 @click.option("--agent", default="http://localhost:10000")
@@ -143,9 +143,9 @@ async def cli(
         context_id = session if session > 0 else uuid4().hex
 
         while continue_loop:
-            console.print("\n" + "="*50)
+            console.print("\n" + "=" * 50)
             console.print("[bold green]Starting new conversation[/bold green]")
-            console.print("="*50)
+            console.print("=" * 50)
             continue_loop, _, taskId = await completeTask(
                 client,
                 streaming,
@@ -162,8 +162,11 @@ async def cli(
                     {"id": taskId, "historyLength": 10}
                 )
                 # Show history in a prettier format
-                history_data = task_response.model_dump(include={"result": {"history": True}})
+                history_data = task_response.model_dump(
+                    include={"result": {"history": True}}
+                )
                 console.print(JSON.from_data(history_data))
+
 
 async def completeTask(
     client: A2AClient,
@@ -175,8 +178,7 @@ async def completeTask(
     contextId,
 ):
     prompt = click.prompt(
-        "\n💬 What do you want to send to the agent? (:q or quit to exit)",
-        type=str
+        "\n💬 What do you want to send to the agent? (:q or quit to exit)", type=str
     )
     if prompt == ":q" or prompt == "quit":
         return False, None, None
@@ -231,16 +233,18 @@ async def completeTask(
                 taskId = event.taskId
                 # Extract meaningful status information
                 status = event.status
-                
+
                 # Show status updates only - messages will be shown at the end
                 # Only show status if it has changed to avoid spam
-                if hasattr(status, 'state') and status.state != last_status_state:
+                if hasattr(status, "state") and status.state != last_status_state:
                     last_status_state = status.state
-                    if status.state == 'working':
+                    if status.state == "working":
                         print_status_update("Working", "Agent is processing...")
-                    elif status.state == 'input-required':
-                        print_status_update("Input Required", "Agent is asking a question...")
-                    elif status.state == 'completed':
+                    elif status.state == "input-required":
+                        print_status_update(
+                            "Input Required", "Agent is asking a question..."
+                        )
+                    elif status.state == "completed":
                         print_status_update("Completed", "Task finished")
                     else:
                         print_status_update("Status Update", f"State: {status.state}")
@@ -291,36 +295,46 @@ async def completeTask(
     if taskResult:
         # Always show the final message from the agent if there is one
         final_message_shown = False
-        
+
         # Check for message in status
-        if hasattr(taskResult.status, 'message') and taskResult.status.message:
-            final_message_text = extract_text_from_parts(taskResult.status.message.parts)
+        if hasattr(taskResult.status, "message") and taskResult.status.message:
+            final_message_text = extract_text_from_parts(
+                taskResult.status.message.parts
+            )
             if final_message_text:
                 print_agent_response(final_message_text)
                 final_message_shown = True
-        
+
         # If no message in status, check the latest message in history
-        if not final_message_shown and hasattr(taskResult, 'history') and taskResult.history:
+        if (
+            not final_message_shown
+            and hasattr(taskResult, "history")
+            and taskResult.history
+        ):
             # Get the last agent message from history
             for msg in reversed(taskResult.history):
-                if hasattr(msg, 'role') and msg.role == 'agent':
+                if hasattr(msg, "role") and msg.role == "agent":
                     final_message_text = extract_text_from_parts(msg.parts)
                     if final_message_text:
                         print_agent_response(final_message_text)
                         final_message_shown = True
                         break
-        
+
         # If still no message, check for artifacts with content
-        if not final_message_shown and hasattr(taskResult, 'artifacts') and taskResult.artifacts:
+        if (
+            not final_message_shown
+            and hasattr(taskResult, "artifacts")
+            and taskResult.artifacts
+        ):
             for artifact in taskResult.artifacts:
                 # Artifacts have parts just like messages, not content
-                if hasattr(artifact, 'parts') and artifact.parts:
+                if hasattr(artifact, "parts") and artifact.parts:
                     artifact_text = extract_text_from_parts(artifact.parts)
                     if artifact_text:
                         print_agent_response(artifact_text)
                         final_message_shown = True
                         break
-        
+
         # Check if we need to continue for input required state
         state = TaskState(taskResult.status.state)
         if state.name == TaskState.input_required.name:

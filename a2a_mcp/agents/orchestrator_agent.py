@@ -64,11 +64,11 @@ class OrchestratorAgent(BaseAgent):
             return response.text
         except Exception as e:
             logger.info(f"Error answering user question: {e}")
-        return '{"can_answer": "no", "answer": "Cannot answer based on provided context"}'
+        return (
+            '{"can_answer": "no", "answer": "Cannot answer based on provided context"}'
+        )
 
-    def set_node_attributes(
-        self, node_id, task_id=None, context_id=None, query=None
-    ):
+    def set_node_attributes(self, node_id, task_id=None, context_id=None, query=None):
         attr_val = {}
         if task_id:
             attr_val["task_id"] = task_id
@@ -89,9 +89,7 @@ class OrchestratorAgent(BaseAgent):
         node_label: str = None,
     ) -> WorkflowNode:
         """Add a node to the graph."""
-        node = WorkflowNode(
-            task=query, node_key=node_key, node_label=node_label
-        )
+        node = WorkflowNode(task=query, node_key=node_key, node_label=node_label)
         self.graph.add_node(node)
         if node_id:
             self.graph.add_edge(node_id, node.id)
@@ -104,9 +102,7 @@ class OrchestratorAgent(BaseAgent):
         self.travel_context.clear()
         self.query_history.clear()
 
-    async def stream(
-        self, query, context_id, task_id
-    ) -> AsyncIterable[dict[str, any]]:
+    async def stream(self, query, context_id, task_id) -> AsyncIterable[dict[str, any]]:
         """Execute and stream response."""
         logger.info(
             f"Running {self.agent_name} stream for session {context_id}, task {task_id} - {query}"
@@ -149,9 +145,7 @@ class OrchestratorAgent(BaseAgent):
             )
             # Resume workflow, used when the workflow nodes are updated.
             should_resume_workflow = False
-            async for chunk in self.graph.run_workflow(
-                start_node_id=start_node_id
-            ):
+            async for chunk in self.graph.run_workflow(start_node_id=start_node_id):
                 if isinstance(chunk.root, SendStreamingMessageSuccessResponse):
                     # The graph node retured TaskStatusUpdateEvent
                     # Check if the node is complete and continue to the next node
@@ -159,24 +153,18 @@ class OrchestratorAgent(BaseAgent):
                         task_status_event = chunk.root.result
                         context_id = task_status_event.contextId
                         if (
-                            task_status_event.status.state
-                            == TaskState.completed
+                            task_status_event.status.state == TaskState.completed
                             and context_id
                         ):
                             ## yeild??
                             continue
-                        if (
-                            task_status_event.status.state
-                            == TaskState.input_required
-                        ):
+                        if task_status_event.status.state == TaskState.input_required:
                             question = task_status_event.status.message.parts[
                                 0
                             ].root.text
 
                             try:
-                                answer = json.loads(
-                                    self.answer_user_question(question)
-                                )
+                                answer = json.loads(self.answer_user_question(question))
                                 logger.info(f"Agent Answer {answer}")
                                 if answer["can_answer"] == "yes":
                                     # Orchestrator can answer on behalf of the user set the query
@@ -205,9 +193,7 @@ class OrchestratorAgent(BaseAgent):
                             )
                             # Define the edges
                             current_node_id = start_node_id
-                            for idx, task_data in enumerate(
-                                artifact_data["tasks"]
-                            ):
+                            for idx, task_data in enumerate(artifact_data["tasks"]):
                                 node = self.add_graph_node(
                                     task_id=task_id,
                                     context_id=context_id,
