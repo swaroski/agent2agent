@@ -27,26 +27,26 @@ logger = logging.getLogger(__name__)
 def get_agent(agent_card: AgentCard):
     """Get the agent, given an agent card."""
     try:
-        if agent_card.name == 'Orchestrator Agent':
+        if agent_card.name == "Orchestrator Agent":
             return OrchestratorAgent()
-        elif agent_card.name == 'Langraph Planner Agent':
+        elif agent_card.name == "Langraph Planner Agent":
             return LangraphPlannerAgent()
-        elif agent_card.name == 'Air Ticketing Agent':
+        elif agent_card.name == "Air Ticketing Agent":
             return TravelAgent(
-                agent_name='AirTicketingAgent',
-                description='Book air tickets given a criteria',
+                agent_name="AirTicketingAgent",
+                description="Book air tickets given a criteria",
                 instructions=prompts.AIRFARE_COT_INSTRUCTIONS,
             )
-        elif agent_card.name == 'Hotel Booking Agent':
+        elif agent_card.name == "Hotel Booking Agent":
             return TravelAgent(
-                agent_name='HotelBookingAgent',
-                description='Book hotels given a criteria',
+                agent_name="HotelBookingAgent",
+                description="Book hotels given a criteria",
                 instructions=prompts.HOTELS_COT_INSTRUCTIONS,
             )
-        elif agent_card.name == 'Car Rental Agent':
+        elif agent_card.name == "Car Rental Agent":
             return TravelAgent(
-                agent_name='CarRentalBookingAgent',
-                description='Book rental cars given a criteria',
+                agent_name="CarRentalBookingAgent",
+                description="Book rental cars given a criteria",
                 instructions=prompts.CARS_COT_INSTRUCTIONS,
             )
             # return LangraphCarRentalAgent()
@@ -55,14 +55,14 @@ def get_agent(agent_card: AgentCard):
 
 
 @click.command()
-@click.option('--host', 'host', default='localhost')
-@click.option('--port', 'port', default=10101)
-@click.option('--agent-card', 'agent_card')
+@click.option("--host", "host", default="localhost")
+@click.option("--port", "port", default=10101)
+@click.option("--agent-card", "agent_card")
 def main(host, port, agent_card):
     """Starts an Agent server."""
     try:
         if not agent_card:
-            raise ValueError('Agent card is required')
+            raise ValueError("Agent card is required")
         with Path.open(agent_card) as file:
             data = json.load(file)
         agent_card = AgentCard(**data)
@@ -78,7 +78,7 @@ def main(host, port, agent_card):
             agent_card=agent_card, http_handler=request_handler
         )
 
-        logger.info(f'Starting server on {host}:{port}')
+        logger.info(f"Starting server on {host}:{port}")
 
         uvicorn.run(server.build(), host=host, port=port)
     except FileNotFoundError:
@@ -88,9 +88,9 @@ def main(host, port, agent_card):
         logger.error(f"Error: File '{agent_card}' contains invalid JSON.")
         sys.exit(1)
     except Exception as e:
-        logger.error(f'An error occurred during server startup: {e}')
+        logger.error(f"An error occurred during server startup: {e}")
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
